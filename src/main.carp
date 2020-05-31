@@ -67,7 +67,10 @@
             n (length &lines)]
         (SDL.render-draw-lines rend (raw lines) n))
       (let [img (match (get-r @(resources state-ref) "./img/square.png")
-                       (PNG image) image)]
+                       (PNG image) image
+                       _ (IMG.load-texture
+                           rend
+                           (cstr "./img/error.png")))]
         (SDL.render-copy-ex rend
                             img
                             (address (SDL.dimensions img))
@@ -103,4 +106,6 @@
         initial-state (World.init (NoOp)
                                   0
                                   (resource-map-from-file "res/resources.json" rend))]
-    (SDLApp.run-with-callbacks &app event-handler tick draw initial-state)))
+    (do 
+      (println "?")
+      (SDLApp.run-with-callbacks &app event-handler tick draw initial-state))))

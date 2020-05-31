@@ -22,10 +22,6 @@
              )
            (use ResourceType)
 
-           (defn = [a b]
-                 (= @a @b))
-           (implements = ResourceManager.=)
-
            (deftype Resource
              [type ResourceType
                    path String
@@ -49,13 +45,14 @@
 
 
            (defn load-resource-data-by-type [resources type data]
+                 (do (println "!")
                  (match data
                         (Unloaded path-on-disk) (match type
                                                        (Png) (PNG (IMG.load-texture
                                                                     @(renderer resources)
                                                                     (cstr &path-on-disk)))
                                                        _ (None))
-                        _ data))
+                        _ data)))
 
            (defn load-resource [resources resource]
                  (update-data @resource
@@ -112,14 +109,23 @@
                           (Maybe.Nothing) (None))))
 
            (defn resource-map-from-file [path rend]
-                 (load-by-trigger
-                   &(Resources.init
-                      (put (Map.create) 
-                           "./img/square.png"
-                           &(Resource.init (Png)
-                                           @"./img/square.png"
-                                           (Unloaded @"./img/square.png")
-                                           [@"OnStartup"]
-                                           []))
-                      rend)
-                   "OnStartup")))
+                 (let [logo (IMG.load-texture
+                              rend
+                              (cstr "./img/square.png"))]
+                   (load-by-trigger
+                     &(Resources.init
+                        (put (put (Map.create) 
+                                  "./img/square.png"
+                                  &(Resource.init (Png)
+                                                  @"./img/square.png"
+                                                  (Unloaded @"./img/square.png")
+                                                  [@"OnStartup"]
+                                                  []))
+                             "./img/carp_logo_969_no_texture.png"
+                             &(Resource.init (Png)
+                                             @"./img/carp_logo_969_no_texture.png"
+                                             (Unloaded @"./img/carp_logo_969_no_texture.png")
+                                             [@"OnStartup"]
+                                             []))
+                       rend)
+                     "OnStartup"))))

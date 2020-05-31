@@ -9,8 +9,8 @@ Eventually, it will parse a JSON file (perhaps an EDN?) of the following format:
     {
       "id": String,
       "path": String,
-      "type": String
-      "loadTriggers": [String]
+      "type": String,
+      "loadTriggers": [String],
       "unloadTriggers": [String]
     }
   ]

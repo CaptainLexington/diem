@@ -1,6 +1,8 @@
 # Resource Manager
 
-The `ResourceManager` module provides a simple resource manager for videogames, currently geared towards 2D SDL games. It will parse a JSON file of the follow format:
+The `ResourceManager` module provides a simple resource manager for videogames, currently geared towards 2D SDL games. 
+
+Eventually, it will parse a JSON file (perhaps an EDN?) of the following format:
 ```json
 { 
   "resources": [

@@ -1,0 +1,93 @@
+(use IO)
+(use System)
+(use Int)
+(use Double)
+(use Array)
+(use Map)
+
+(load "SDL.carp")
+(load "SDL_image.carp")
+
+(defmodule Input
+           (deftype InputEvent
+             (KeyDown [SDL_Keycode])
+             (KeyUp [SDL_Keycode])
+             (KeyHeldDown [SDL_Keycode])
+             (ChordDown [(Array SDL_Keycode)])
+             (ChordUp [(Array SDL_Keycode)])
+             (ChordHeldDown [(Array SDL_Keycode)])
+             (MouseMotion [Int Int])
+             MouseButtonUp
+             MouseButtonDown
+             (MouseWheel [Int])
+             )
+
+           (use InputEvent)
+
+           (defn str-keycode-list [keycodes]
+                 (str &(copy-map &(fn [keycode] (str @keycode)) &keycodes)))
+
+           (defn str [input-event]
+                 (match (the InputEvent input-event)
+                        (KeyDown keycode) (concat &[@"KeyDown " (str keycode)])
+                        (KeyUp keycode) (concat &[@"KeyUp " (str keycode)])
+                        (KeyHeldDown keycode) (concat &[@"KeyHeldDown " (str keycode)])
+                            (ChordDown keycodes) (concat &[@"ChordDown " (str-keycode-list keycodes)])
+                        (ChordUp keycodes) (concat &[@"ChordDown " (str-keycode-list keycodes)])
+                        (ChordHeldDown keycodes) (concat &[@"ChordHeldDown " (str-keycode-list keycodes)])
+                        (MouseMotion x y) (concat &[@"MouseMotion " (str x) @"," (str y)])
+                        (MouseButtonUp) @"MouseButtonUp"
+                        (MouseButtonDown) @"MouseButtonDown"
+                        (MouseWheel delta) (concat &[@"MouseWheel " (str delta)])
+                        ))
+           (implements str Input.str)
+  
+           (defn = [a b]
+                 (= (str (the (ref InputEvent) a))
+                    (str (the (ref InputEvent) b))))
+           (implements = Input.=)
+
+           (defn hash [input-event]
+                 (hash &(str (the (ref InputEvent) input-event))))
+           (implements hash Input.hash)
+
+           (defn bindings-from-array [binding-defs]
+                 (from-array binding-defs))
+
+           (defn value-by-input [bindings input]
+                 (get-maybe bindings input))
+
+           (defn value-by-event [bindings event]
+                 (let [et (SDL.Event.type event)]
+                   (cond 
+                     ;; Key Down
+                     (= et SDL.Event.key-down)
+                     (let [key (SDL.Event.keycode event)
+                           input (KeyDown key)]
+                       (value-by-input bindings &input))
+
+                     ;; Key Up
+                     (= et SDL.Event.key-up)
+                     (let [key (SDL.Event.keycode event)
+                           input (KeyUp key)]
+                       (value-by-input bindings &input))
+
+                     ;; Mouse Motion
+                     (= et SDL.Event.mouse-motion)
+                     (let [mouse (SDL.MouseState.get)
+                           input (MouseMotion @(SDL.MouseState.x &mouse) @(SDL.MouseState.y &mouse))]
+                       (value-by-input bindings &input))
+
+                     ;; Mouse Button Up
+                     (= et SDL.Event.mouse-button-up)
+                     (let [mouse (SDL.MouseState.get)
+                           input (MouseButtonUp)]
+                       (value-by-input bindings &input))
+
+                     ;; Mouse Button Down
+                     (= et SDL.Event.mouse-button-down)
+                     (let [mouse (SDL.MouseState.get)
+                           input (MouseButtonDown)]
+                       (value-by-input bindings &input))
+                     
+                     (Maybe.Nothing)))))

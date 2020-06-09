@@ -1,0 +1,18 @@
+{
+  "resources": [
+    {
+      "id": "square",
+      "path": "./img/square.png",
+      "type": "PNG",
+      "loadTriggers": ["OnStartup"],
+      "unloadTriggers": []
+    }
+  ],
+  "inputs": {
+    "esc": "Quit",
+    "backspace": "PrintBang",
+    "mouse-motion": "MoveBoxes",
+    "lmb": "Pause", 
+    "lmb up": "Unpause"
+  }
+}

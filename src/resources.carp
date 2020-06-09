@@ -45,14 +45,15 @@
 
 
            (defn load-resource-data-by-type [resources type data]
-                 (do (println "!")
-                 (match data
-                        (Unloaded path-on-disk) (match type
-                                                       (Png) (PNG (IMG.load-texture
-                                                                    @(renderer resources)
-                                                                    (cstr &path-on-disk)))
-                                                       _ (None))
-                        _ data)))
+                 (do
+                   (println "!")
+                   (match data
+                          (Unloaded path-on-disk) (match type
+                                                         (Png) (PNG (IMG.load-texture
+                                                                      @(renderer resources)
+                                                                      (cstr &path-on-disk)))
+                                                         _ (None))
+                          _ data)))
 
            (defn load-resource [resources resource]
                  (update-data @resource

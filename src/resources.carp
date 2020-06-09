@@ -112,20 +112,12 @@
                  (let [logo (IMG.load-texture
                               rend
                               (cstr "./img/square.png"))]
-                   (load-by-trigger
-                     &(Resources.init
-                        (put (put (Map.create) 
-                                  "./img/square.png"
-                                  &(Resource.init (Png)
-                                                  @"./img/square.png"
-                                                  (Unloaded @"./img/square.png")
-                                                  [@"OnStartup"]
-                                                  []))
-                             "./img/carp_logo_969_no_texture.png"
-                             &(Resource.init (Png)
-                                             @"./img/carp_logo_969_no_texture.png"
-                                             (Unloaded @"./img/carp_logo_969_no_texture.png")
-                                             [@"OnStartup"]
-                                             []))
-                       rend)
-                     "OnStartup"))))
+                   (Resources.init
+                     (put (Map.create) 
+                          "./img/square.png"
+                          &(Resource.init (Png)
+                                          @"./img/square.png"
+                                          (PNG logo)
+                                          [@"OnStartup"]
+                                          []))
+                     rend))))

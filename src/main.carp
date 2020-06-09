@@ -11,6 +11,11 @@
 (use ResourceManager)
 (use ResourceManager.ResourceData)
 
+(load "src/input.carp")
+(use Input)
+(use Input.InputEvent)
+
+
 (Project.config "title" "Game")
 
 (def rand-max 400)
@@ -27,6 +32,11 @@
 
 (deftype Message
   NoOp
+  Quit
+  Pause
+  Unpause
+  PrintBang
+  (MoveBoxes [SDL.MouseState])
   )
 
 (use Message)
@@ -35,7 +45,8 @@
 (deftype World
   [msg Message
    state Int
-   resources Resources]
+   resources Resources
+   bindings (Map InputEvent Message)]
   )
 (use World)
 
@@ -80,32 +91,33 @@
                             SDL.flip-none)))))
 
 (defn event-handler [app state event]
-  (let [et (SDL.Event.type event)]
-    (cond
-      ;; Quit event
-      (= et SDL.Event.quit)
+  (let [et (SDL.Event.type event)
+        maybe-message (value-by-event (bindings &state) event)]
+    (if (= et SDL.Event.quit)
       (SDLApp.stop app)
+      (match maybe-message
+             (Maybe.Just message) (set-msg state message)
+             (Maybe.Nothing) state))))
 
-      ;; Key events
-      (= et SDL.Event.key-down)
-      (let [key (SDL.Event.keycode event)]
-        (cond
-          (= key SDL.Keycode.escape) (SDLApp.stop app)
-          (= key SDL.Keycode.backspace) (do (println "!")
-                                            state)
-          state))
-
-      ;; Other event
-      state)))
-
-(defn tick [state] state)
+(defn tick [state]
+      (match @(msg &state)
+             PrintBang (do (println "!")
+                         (set-msg state (NoOp)))
+             _ state))
 
 (defn main []
   (let [app (SDLApp.create "~ CARP ~" 512 512)
         rend @(SDLApp.renderer &app)
+        resources (resource-map-from-file "res/resources.json" rend)
+        bindings (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
+                                                   (Quit))
+                                        (Pair.init (KeyDown SDL.Keycode.backspace)
+                                                   (PrintBang))])
         initial-state (World.init (NoOp)
                                   0
-                                  (resource-map-from-file "res/resources.json" rend))]
+                                  resources
+                                  bindings
+                                  )]
     (do 
       (println "?")
       (SDLApp.run-with-callbacks &app event-handler tick draw initial-state))))

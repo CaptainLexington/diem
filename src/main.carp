@@ -77,7 +77,7 @@
       (let [lines (random-lines)
             n (length &lines)]
         (SDL.render-draw-lines rend (raw lines) n))
-      (let [img (get-png (resources state-ref) "./img/squave.png")]
+      (let [img (get-png (resources state-ref) "./img/square.png")]
         (SDL.render-copy-ex rend
                             img
                             (address (SDL.dimensions img))
@@ -110,7 +110,7 @@
 (defn main []
   (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
         rend @(SDLApp.renderer &sdl-app)
-        resources (resource-map-from-file "config.json" rend)
+        resources (resources-hardcoded rend)
         bindings (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
                                                    (Quit))
                                         (Pair.init (KeyDown SDL.Keycode.backspace)

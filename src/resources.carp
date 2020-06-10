@@ -116,15 +116,16 @@
                             @(renderer resources)
                             (cstr "./img/error.png"))))
 
-           (defn resource-map-from-file [path rend]
-                 (let [logo (IMG.load-texture
+           (defn resources-hardcoded [rend]
+                 (let [img-path "./img/square.png"
+                       logo (IMG.load-texture
                               rend
-                              (cstr "./img/square.png"))]
+                              (cstr img-path))]
                    (Resources.init
                      (put (Map.create) 
-                          "./img/square.png"
+                          img-path
                           &(Resource.init (Png)
-                                          @"./img/square.png"
+                                          @img-path
                                           (PNG logo)
                                           [@"OnStartup"]
                                           []))

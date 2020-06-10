@@ -41,10 +41,16 @@
 
 (use Message)
 
+(deftype GameState
+  [boxes-x Int
+   fish-rot Double])
+(use GameState)
 
 (deftype World
   [msg Message
-   state Int
+   state GameState
+   real-time Int
+   game-time Int
    app SDLApp
    resources Resources
    bindings (Map InputEvent Message)]
@@ -61,7 +67,7 @@
       (SDL.set-render-draw-color rend 200 250 255 255)
       (SDL.render-fill-rect rend (address rect))
       (SDL.set-render-draw-color rend 100 50 255 155)
-      (let [x @(state state-ref)
+      (let [x @(boxes-x (state state-ref))
             rects [(SDL.rect x 48 16 16)
                    (SDL.rect (* x 2) 80 16 16)
                    (SDL.rect (* x 4) 112 16 16)
@@ -82,30 +88,56 @@
                             img
                             (address (SDL.dimensions img))
                             (address (SDL.rect 100 100 300 300))
-                            (* 0.1 (from-int (SDL.get-ticks)))
+                            @(fish-rot (state state-ref))
                             (address (SDL.point 150 150))
                             SDL.flip-none)))))
 
-(defn event-handler [app state event]
+(defn event-handler [app world event]
   (let [et (SDL.Event.type event)
-        maybe-message (value-by-event (bindings &state) event)]
+        maybe-message (value-by-event (bindings &world) event)]
     (if (= et SDL.Event.quit)
-      (set-msg state (Quit))
+      (set-msg world (Quit))
       (match maybe-message
-             (Maybe.Just message) (set-msg state message)
-             (Maybe.Nothing) state))))
+             (Maybe.Just message) (set-msg world message)
+             (Maybe.Nothing) world))))
+
+(defn update-boxes-x [state]
+                (let [mouse-state (SDL.MouseState.get)]
+                  (set-boxes-x state
+                               @(SDL.MouseState.x &mouse-state))))
+
+
+(defn update-world [world message]
+      (match @message
+             PrintBang (do (println "!")
+                         world)
+             MoveBoxes (update-state world &update-boxes-x)
+             Quit (do (SDLApp.stop (app &world))
+                    world)
+             _ world))
+
+(defn advance-fish-rot [state game-time]
+      (set-fish-rot state
+                    (* 0.1 (from-int game-time))))
+
+(defn advance-world [world]
+      (let [sdl-time (SDL.get-ticks)
+            game-time @(game-time &world)
+            state @(state &world)]
+        (=> world
+            (set-real-time sdl-time)
+            (set-game-time (/ sdl-time 5))
+            (set-state (advance-fish-rot state game-time)))))
 
 (defn tick [world]
-      (set-msg
-        (match @(msg &world)
-               PrintBang (do (println "!")
-                           world)
-               MoveBoxes (let [mouse-state (SDL.MouseState.get)]
-                           (set-state world @(SDL.MouseState.x &mouse-state)))
-               Quit (do (SDLApp.stop (app &world))
-                      world)
-               _ world)
-        (NoOp)))
+      (=> world
+          ; update-world changes the world
+          ; according to some Message
+          (update-world (msg &world))
+          (set-msg (NoOp))
+          ; advance-world changes the world
+          ; according to the passage of time
+          advance-world))
 
 (defn main []
   (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
@@ -117,8 +149,12 @@
                                                    (PrintBang))
                                         (Pair.init (MouseMotion)
                                                    (MoveBoxes))])
+        sdl-time (SDL.get-ticks)
         initial-state (World.init (NoOp)
-                                  0
+                                  (GameState.init 0
+                                                  0.0)
+                                  sdl-time
+                                  (/ sdl-time 5)
                                   sdl-app
                                   resources
                                   bindings

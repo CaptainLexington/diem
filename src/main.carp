@@ -36,7 +36,7 @@
   Pause
   Unpause
   PrintBang
-  (MoveBoxes [SDL.MouseState])
+  MoveBoxes
   )
 
 (use Message)
@@ -45,6 +45,7 @@
 (deftype World
   [msg Message
    state Int
+   app SDLApp
    resources Resources
    bindings (Map InputEvent Message)]
   )
@@ -60,8 +61,7 @@
       (SDL.set-render-draw-color rend 200 250 255 255)
       (SDL.render-fill-rect rend (address rect))
       (SDL.set-render-draw-color rend 100 50 255 155)
-      (let [mouse-state (SDL.MouseState.get)
-            x @(SDL.MouseState.x &mouse-state)
+      (let [x @(state state-ref)
             rects [(SDL.rect x 48 16 16)
                    (SDL.rect (* x 2) 80 16 16)
                    (SDL.rect (* x 4) 112 16 16)
@@ -77,11 +77,7 @@
       (let [lines (random-lines)
             n (length &lines)]
         (SDL.render-draw-lines rend (raw lines) n))
-      (let [img (match (get-r @(resources state-ref) "./img/square.png")
-                       (PNG image) image
-                       _ (IMG.load-texture
-                           rend
-                           (cstr "./img/error.png")))]
+      (let [img (get-png (resources state-ref) "./img/squave.png")]
         (SDL.render-copy-ex rend
                             img
                             (address (SDL.dimensions img))
@@ -94,30 +90,39 @@
   (let [et (SDL.Event.type event)
         maybe-message (value-by-event (bindings &state) event)]
     (if (= et SDL.Event.quit)
-      (SDLApp.stop app)
+      (set-msg state (Quit))
       (match maybe-message
              (Maybe.Just message) (set-msg state message)
              (Maybe.Nothing) state))))
 
-(defn tick [state]
-      (match @(msg &state)
-             PrintBang (do (println "!")
-                         (set-msg state (NoOp)))
-             _ state))
+(defn tick [world]
+      (set-msg
+        (match @(msg &world)
+               PrintBang (do (println "!")
+                           world)
+               MoveBoxes (let [mouse-state (SDL.MouseState.get)]
+                           (set-state world @(SDL.MouseState.x &mouse-state)))
+               Quit (do (SDLApp.stop (app &world))
+                      world)
+               _ world)
+        (NoOp)))
 
 (defn main []
-  (let [app (SDLApp.create "~ CARP ~" 512 512)
-        rend @(SDLApp.renderer &app)
-        resources (resource-map-from-file "res/resources.json" rend)
+  (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
+        rend @(SDLApp.renderer &sdl-app)
+        resources (resource-map-from-file "config.json" rend)
         bindings (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
                                                    (Quit))
                                         (Pair.init (KeyDown SDL.Keycode.backspace)
-                                                   (PrintBang))])
+                                                   (PrintBang))
+                                        (Pair.init (MouseMotion)
+                                                   (MoveBoxes))])
         initial-state (World.init (NoOp)
                                   0
+                                  sdl-app
                                   resources
                                   bindings
                                   )]
     (do 
       (println "?")
-      (SDLApp.run-with-callbacks &app event-handler tick draw initial-state))))
+      (SDLApp.run-with-callbacks (app &initial-state) event-handler tick draw initial-state))))

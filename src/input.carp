@@ -16,10 +16,10 @@
              (ChordDown [(Array SDL_Keycode)])
              (ChordUp [(Array SDL_Keycode)])
              (ChordHeldDown [(Array SDL_Keycode)])
-             (MouseMotion [Int Int])
+             MouseMotion
              MouseButtonUp
              MouseButtonDown
-             (MouseWheel [Int])
+             MouseWheel
              )
 
            (use InputEvent)
@@ -35,10 +35,10 @@
                             (ChordDown keycodes) (concat &[@"ChordDown " (str-keycode-list keycodes)])
                         (ChordUp keycodes) (concat &[@"ChordDown " (str-keycode-list keycodes)])
                         (ChordHeldDown keycodes) (concat &[@"ChordHeldDown " (str-keycode-list keycodes)])
-                        (MouseMotion x y) (concat &[@"MouseMotion " (str x) @"," (str y)])
+                        (MouseMotion) @"MouseMotion"
                         (MouseButtonUp) @"MouseButtonUp"
                         (MouseButtonDown) @"MouseButtonDown"
-                        (MouseWheel delta) (concat &[@"MouseWheel " (str delta)])
+                        (MouseWheel) @"MouseWheel"
                         ))
            (implements str Input.str)
   
@@ -75,7 +75,7 @@
                      ;; Mouse Motion
                      (= et SDL.Event.mouse-motion)
                      (let [mouse (SDL.MouseState.get)
-                           input (MouseMotion @(SDL.MouseState.x &mouse) @(SDL.MouseState.y &mouse))]
+                           input (MouseMotion)]
                        (value-by-input bindings &input))
 
                      ;; Mouse Button Up

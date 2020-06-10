@@ -109,6 +109,13 @@
                           (Maybe.Just resource) @(data &resource)
                           (Maybe.Nothing) (None))))
 
+           (defn get-png [resources id]
+                 (match (get-r @resources id)
+                        (PNG image) image
+                        _ (IMG.load-texture
+                            @(renderer resources)
+                            (cstr "./img/error.png"))))
+
            (defn resource-map-from-file [path rend]
                  (let [logo (IMG.load-texture
                               rend

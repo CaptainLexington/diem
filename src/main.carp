@@ -15,9 +15,6 @@
 (use ResourceManager)
 (use ResourceManager.ResourceData)
 
-(load "src/input.carp")
-(use Input)
-(use Input.InputEvent)
 
 (load "src/draw.carp")
 (use Draw.Raster)

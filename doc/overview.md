@@ -1,6 +1,6 @@
 # Overview
 
-This game is intended to be built in concert with an experimental game engine. I will lay out the goals of the game engine, the roadmap, the architecture, and a quick guide to start using it.
+Coy is a lightweight, experimental game engine. It attempts to combine the [simplicity](https://www.youtube.com/watch?v=kGlVcSMgtV4) of the [Elm Architecture](https://guide.elm-lang.org/architecture/) with the [easiness](https://www.youtube.com/watch?v=oytL881p-nQ) of [DragonRuby](https://dragonruby.itch.io/dragonruby-gtk). I will lay out the goals of the game engine, the roadmap, the architecture, and a quick guide to start using it.
 
 ## Goals
 The purpose of Carp is to combine functional programming techniques, type inference, and compile-time borrow checking to make popular ideas of modern software development to performance-intensive projects like videogames. Likewise, the purpose of this engine is to bring a functional, strongly type sensibility to the architecture of a game project. The engine that results should
@@ -25,7 +25,7 @@ In contrast, the engine does _not_ strive to
 - Game World Editor (HTML app via http connection with running game?)
 
 ## Architecture
-The architecture is similar to the Elm Architecture: your game has a state and a update function; an event handler transforms input events into game events; the update function takes the state and a game event, and returns an updated state; then another function transforms that state into visual information (i.e. draws it). This loops forever until the game is closed.
+The architecture is similar to the Elm Architecture: your game has a state and an update function: the update function takes the state and a game event, and returns an updated state. Coy itself will provide you with Game events of your own definiton (according to a map of input bindings) and will draw it as well (according to the `get-rasters` function). This loops forever until the game is closed.
 
 ### Game Events
 Game events are just a sum type of every possible consequence. We don't define them for you - they're for you to define yourself. You will probably have to wrap events for some subsystems.

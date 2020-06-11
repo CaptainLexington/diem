@@ -4,8 +4,12 @@
 (use Double)
 (use Array)
 
+(load "Vector.carp")
+(use Vector2)
+
 (load "SDL.carp")
 (load "SDL_image.carp")
+
 
 (load "src/resources.carp")
 (use ResourceManager)
@@ -14,6 +18,9 @@
 (load "src/input.carp")
 (use Input)
 (use Input.InputEvent)
+
+(load "src/draw.carp")
+(use Draw.Raster)
 
 
 (Project.config "title" "Game")
@@ -57,40 +64,28 @@
   )
 (use World)
 
+(defn red-lines [res x]
+      (let [line-color (SDL.rgb 255 50 100)]
+        (concat
+          &[res
+             [(Line (Vector2.init @x 0) (Vector2.init 512 512) line-color)
+              (Line (Vector2.init 512 (+ 256 (/ @x 2))) (Vector2.init 0 512) line-color)]])))
 
 (defn draw [app rend state-ref]
-  (let [rect (SDL.rect 32 32 (- 512 64) (- 512 64))]
-    (do
-      (SDL.set-render-draw-blend-mode rend SDL.blend-mode-add)
-      (SDL.set-render-draw-color rend 0 0 0 255)
-      (SDL.render-clear rend)
-      (SDL.set-render-draw-color rend 200 250 255 255)
-      (SDL.render-fill-rect rend (address rect))
-      (SDL.set-render-draw-color rend 100 50 255 155)
-      (let [x @(boxes-x (state state-ref))
-            rects [(SDL.rect x 48 16 16)
-                   (SDL.rect (* x 2) 80 16 16)
-                   (SDL.rect (* x 4) 112 16 16)
-                   (SDL.rect (* x 8) 144 16 16)]
-            n (length &rects)]
-        (SDL.render-fill-rects rend (raw rects) n))
-      (SDL.set-render-draw-color rend 255 50 100 255)
-      (for [x 0 512 16]
-        (do
-          (SDL.render-draw-line rend x 0 512 512)
-          (SDL.render-draw-line rend 512 (+ 256 (/ x 2)) 0 512)))
-      (SDL.set-render-draw-color rend 0 0 0 255)
-      (let [lines (random-lines)
-            n (length &lines)]
-        (SDL.render-draw-lines rend (raw lines) n))
-      (let [img (get-png (resources state-ref) "./img/square.png")]
-        (SDL.render-copy-ex rend
-                            img
-                            (address (SDL.dimensions img))
-                            (address (SDL.rect 100 100 300 300))
-                            @(fish-rot (state state-ref))
-                            (address (SDL.point 150 150))
-                            SDL.flip-none)))))
+  (let [bg-color (SDL.rgb 0 0 0)
+        window-color (SDL.rgb 200 250 255)
+        window (Solid (Vector2.init  32 32) (Vector2.init (- 512 64) (- 512 64)) window-color)
+        x @(boxes-x (state state-ref))
+        box-color (SDL.rgb 100 50 255)
+        box-size (Vector2.init 16 16)
+        boxes [(Solid (Vector2.init x 48) box-size box-color)
+               (Solid (Vector2.init (* x 2) 80) box-size box-color)
+               (Solid (Vector2.init (* x 4) 112) box-size box-color)
+               (Solid (Vector2.init (* x 8) 144) box-size box-color)]
+        lines (reduce &red-lines [] &(range-or-default 0 512 16))
+        img (get-png (resources state-ref) "./img/square.png")
+        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) img @(fish-rot (state state-ref)))]
+    (Draw.draw rend &(concat &[[window] lines [sprite] boxes]))))
 
 (defn event-handler [app world event]
   (let [et (SDL.Event.type event)

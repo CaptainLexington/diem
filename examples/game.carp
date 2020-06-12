@@ -1,3 +1,6 @@
+; A recreation of examples/game.carp
+; from the official Carp repo
+
 (use IO)
 (use System)
 (use Int)
@@ -137,10 +140,8 @@
         initial-state (State.init logo
                                   0
                                   0.0)]
-    (do 
-      (println "?")
-      (run-2d-game &(simple-2d-game sdl-app initial-state)
+    (run-2d-game &(simple-2d-game sdl-app initial-state)
                    &tick 
                    &subscribe
                    &get-rasters
-                   &(NoOp)))))
+                   &(NoOp))))

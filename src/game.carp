@@ -39,7 +39,7 @@
                                   target-dt (/ 1000 @(SDLApp.fps sdl-app))]
                          (while true
                                 (let [messages (copy-map
-                                                 &(fn [msg] (subscribe-fn game msg)) 
+                                                 &(fn [msg] (~subscribe-fn game msg)) 
                                                  &(SDL.Event.all))]
                                   (do
                                     (set! game &(reduce &(message-reducer update-fn)
@@ -52,5 +52,5 @@
                                     (set-real-time! game (SDL.get-ticks))
                                     (set-game-time! game (from-realtime (SDL.get-ticks)
                                                                         @(granularity (game-time game))))
-                                    (Draw.draw rend &(raster-fn (state game)))
+                                    (Draw.draw rend &(~raster-fn (state game)))
                                     (SDL.render-present rend)))))))

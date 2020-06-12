@@ -53,7 +53,7 @@
 (use Message)
 
 (deftype State
-  [resources Resources
+  [logo (Ptr SDL_Texture)
    boxes-x Int
    fish-rot Double])
 (use State)
@@ -77,8 +77,8 @@
                (Solid (Vector2.init (* x 4) 112) box-size box-color)
                (Solid (Vector2.init (* x 8) 144) box-size box-color)]
         lines (reduce &red-lines [] &(range-or-default 0 512 16))
-        img (get-png (resources state-ref) "./img/square.png")
-        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) img @(fish-rot state-ref))]
+        img (logo state-ref)
+        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) @img @(fish-rot state-ref))]
     (concat &[[window] lines [sprite] boxes])))
 
 
@@ -107,7 +107,7 @@
 
 (defn update-game [game message]
       (match @message
-             PrintBang (do (println "!")
+             PrintBang (do (println "!!")
                          game)
              MoveBoxes (update-state game &update-boxes-x)
              Quit (do (SDLApp.stop (app &game))
@@ -131,14 +131,15 @@
 (defn main []
   (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
         rend @(SDLApp.renderer &sdl-app)
-        resources (resources-hardcoded rend)
-        
-        initial-state (State.init resources
+        logo (IMG.load-texture
+               rend
+               (cstr "./img/square.png"))
+        initial-state (State.init logo
                                   0
                                   0.0)]
     (do 
       (println "?")
       (run-2d-game &(simple-2d-game sdl-app initial-state)
                    &tick 
-                   subscribe
-                   get-rasters))))
+                   &subscribe
+                   &get-rasters))))

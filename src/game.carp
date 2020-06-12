@@ -32,7 +32,7 @@
                      (~update-fn res message)))
 
            (doc run-2d-game "given an update-fn and a Game value, run the game")
-           (defn run-2d-game [initial-state update-fn subscribe-fn raster-fn]
+           (defn run-2d-game [initial-state update-fn subscribe-fn raster-fn tick-type]
                  (let-do [sdl-app (app initial-state)
                                   rend @(SDLApp.renderer sdl-app)
                                   game initial-state
@@ -43,8 +43,8 @@
                                                  &(SDL.Event.all))]
                                   (do
                                     (set! game &(reduce &(message-reducer update-fn)
-                                                       @game
-                                                       &messages))
+                                                           @game
+                                                           &(push-back messages @tick-type)))
                                     (let-do [dt (- (SDL.get-ticks) @(real-time game))
                                                 time-left  (- target-dt dt)]
                                             (when (pos? time-left)

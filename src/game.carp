@@ -1,54 +1,56 @@
-(load "src/input.carp")
-(use Input)
-(use Input.InputEvent)
-
 (load "src/draw.carp")
 (use Draw.Raster)
 
-(deftype GameTime
-  [timestamp Int
-   granularity Int])
 
-(deftype Game
-  [app SDLApp
-   real-time Int
-   game-time GameTime
-   bindings (Map InputEvent Message)
-   state a])
+(defmodule Game
+           (deftype GameTime
+             [timestamp Int
+              granularity Int])
+           (use GameTime)
 
-(definterface get-rasters [&a] (Array Raster))
+           (deftype (Game a)
+             [app SDLApp
+              real-time Int
+              game-time GameTime
+              state a])
+           (use Game)
 
+           (defn from-realtime [rt gran]
+                 (GameTime.init (/ rt gran)
+                                gran))
 
-(defn input-to-messages [game]
-  (let [et (SDL.Event.type event)
-        maybe-message (value-by-event (bindings &world) event)]
-    (if (= et SDL.Event.quit)
-      (set-msg world (Quit))
-      (match maybe-message
-             (Maybe.Just message) (set-msg world message)
-             (Maybe.Nothing) world))))
+           (defn simple-2d-game [app rasters]
+                 (let [sdl-time (SDL.get-ticks)]
+                   (Game.init
+                     app
+                     sdl-time
+                     (from-realtime sdl-time 5)
+                     rasters)))
 
+           (defn message-reducer [update-fn]
+                 (fn [res message]
+                     (~update-fn res message)))
 
-(defn message-reducer [update-fn]
-    (fn [res message]
-        (update-fn res message)))
-
-(doc run-game "given an update-fn and a Game value, run the game")
-(defn run-game [update-fn initial-state]
-      (let-do [sdl-app (app iniital-state)
-               rend @(SDLApp.renderer sdl-app)
-               game initial-state
-               target-dt (/ 1000 @ (SDLApp.fps sdl-app))]
-               (while true
-                      (let [messages (input-to-messages game)]
-                        (do
-                          (set! game (reduce &(message-reducer update-fn) messages))
-                          (let-do [dt  (- (SDL.get-ticks) (real-time game))
-                                   time-left  (- target-dt dt)]
-                                  (when (pos? time-left)
-                                    (SDL.delay time-left)))
-                          (set-real-time! game (SDL.get-ticks))
-                          (set-game-time! game (GameTime.init (/ (SDL.get-ticks) (granularity (game-time game)))
-                                                              (granularity (game-time game))))
-                          (draw-fn rend (get-rasters &(state game)))
-                          (SDL.render-present rend))))))
+           (doc run-2d-game "given an update-fn and a Game value, run the game")
+           (defn run-2d-game [initial-state update-fn subscribe-fn raster-fn]
+                 (let-do [sdl-app (app initial-state)
+                                  rend @(SDLApp.renderer sdl-app)
+                                  game initial-state
+                                  target-dt (/ 1000 @(SDLApp.fps sdl-app))]
+                         (while true
+                                (let [messages (copy-map
+                                                 &(fn [msg] (subscribe-fn game msg)) 
+                                                 &(SDL.Event.all))]
+                                  (do
+                                    (set! game &(reduce &(message-reducer update-fn)
+                                                       @game
+                                                       &messages))
+                                    (let-do [dt (- (SDL.get-ticks) @(real-time game))
+                                                time-left  (- target-dt dt)]
+                                            (when (pos? time-left)
+                                              (SDL.delay time-left)))
+                                    (set-real-time! game (SDL.get-ticks))
+                                    (set-game-time! game (from-realtime (SDL.get-ticks)
+                                                                        @(granularity (game-time game))))
+                                    (Draw.draw rend &(raster-fn (state game)))
+                                    (SDL.render-present rend)))))))

@@ -6,7 +6,7 @@
 If you're in the Carp community, you almost certainly know more about C, Carp, and game programming than I do. Feel free to leave issues or make PRs.
 
 ## License
-coy is released under the [wftpl](http://www.wtfpl.net/)
+coy is released under the [wtfpl](http://www.wtfpl.net/)
 ```
 
             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE

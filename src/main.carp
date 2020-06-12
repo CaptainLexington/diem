@@ -22,6 +22,10 @@
 (load "src/draw.carp")
 (use Draw.Raster)
 
+(load "src/game.carp")
+(use Game)
+(use Game.Game)
+(use Game.GameTime)
 
 (Project.config "title" "Game")
 
@@ -48,21 +52,11 @@
 
 (use Message)
 
-(deftype GameState
-  [boxes-x Int
+(deftype State
+  [logo (Ptr SDL_Texture)
+   boxes-x Int
    fish-rot Double])
-(use GameState)
-
-(deftype World
-  [msg Message
-   state GameState
-   real-time Int
-   game-time Int
-   app SDLApp
-   resources Resources
-   bindings (Map InputEvent Message)]
-  )
-(use World)
+(use State)
 
 (defn red-lines [res x]
       (let [line-color (SDL.rgb 255 50 100)]
@@ -71,11 +65,11 @@
              [(Line (Vector2.init @x 0) (Vector2.init 512 512) line-color)
               (Line (Vector2.init 512 (+ 256 (/ @x 2))) (Vector2.init 0 512) line-color)]])))
 
-(defn draw [app rend state-ref]
+(defn get-rasters [state-ref]
   (let [bg-color (SDL.rgb 0 0 0)
         window-color (SDL.rgb 200 250 255)
         window (Solid (Vector2.init  32 32) (Vector2.init (- 512 64) (- 512 64)) window-color)
-        x @(boxes-x (state state-ref))
+        x @(boxes-x state-ref)
         box-color (SDL.rgb 100 50 255)
         box-size (Vector2.init 16 16)
         boxes [(Solid (Vector2.init x 48) box-size box-color)
@@ -83,18 +77,27 @@
                (Solid (Vector2.init (* x 4) 112) box-size box-color)
                (Solid (Vector2.init (* x 8) 144) box-size box-color)]
         lines (reduce &red-lines [] &(range-or-default 0 512 16))
-        img (get-png (resources state-ref) "./img/square.png")
-        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) img @(fish-rot (state state-ref)))]
-    (Draw.draw rend &(concat &[[window] lines [sprite] boxes]))))
+        img (logo state-ref)
+        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) @img @(fish-rot state-ref))]
+    (concat &[[window] lines [sprite] boxes])))
 
-(defn event-handler [app world event]
-  (let [et (SDL.Event.type event)
-        maybe-message (value-by-event (bindings &world) event)]
-    (if (= et SDL.Event.quit)
-      (set-msg world (Quit))
-      (match maybe-message
-             (Maybe.Just message) (set-msg world message)
-             (Maybe.Nothing) world))))
+
+(def bindings
+     (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
+                                       (Quit))
+                            (Pair.init (KeyDown SDL.Keycode.backspace)
+                                       (PrintBang))
+                            (Pair.init (MouseMotion)
+                                       (MoveBoxes))]))
+
+(defn subscribe [game event]
+      (let [et (SDL.Event.type event)
+               maybe-message (value-by-event &bindings event)]
+        (if (= et SDL.Event.quit)
+          (Quit)
+          (match maybe-message
+                 (Maybe.Just message) message
+                 (Maybe.Nothing) (NoOp)))))
 
 (defn update-boxes-x [state]
                 (let [mouse-state (SDL.MouseState.get)]
@@ -102,58 +105,41 @@
                                @(SDL.MouseState.x &mouse-state))))
 
 
-(defn update-world [world message]
+(defn update-game [game message]
       (match @message
-             PrintBang (do (println "!")
-                         world)
-             MoveBoxes (update-state world &update-boxes-x)
-             Quit (do (SDLApp.stop (app &world))
-                    world)
-             _ world))
+             PrintBang (do (println "!!")
+                         game)
+             MoveBoxes (update-state game &update-boxes-x)
+             Quit (do (SDLApp.stop (app &game))
+                    game)
+             _ game))
 
 (defn advance-fish-rot [state game-time]
       (set-fish-rot state
-                    (* 0.1 (from-int game-time))))
+                    (* 0.1 (from-int @(timestamp game-time)))))
 
-(defn advance-world [world]
-      (let [sdl-time (SDL.get-ticks)
-            game-time @(game-time &world)
-            state @(state &world)]
-        (=> world
-            (set-real-time sdl-time)
-            (set-game-time (/ sdl-time 5))
-            (set-state (advance-fish-rot state game-time)))))
+(defn advance-game [game]
+      (let [game-time (game-time &game)
+            state @(state &game)]
+        (set-state game (advance-fish-rot state game-time))))
 
-(defn tick [world]
-      (=> world
-          ; update-world changes the world
-          ; according to some Message
-          (update-world (msg &world))
-          (set-msg (NoOp))
-          ; advance-world changes the world
-          ; according to the passage of time
-          advance-world))
+(defn tick [game message]
+      (=> game
+          (update-game message)
+          advance-game))
 
 (defn main []
   (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
         rend @(SDLApp.renderer &sdl-app)
-        resources (resources-hardcoded rend)
-        bindings (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
-                                                   (Quit))
-                                        (Pair.init (KeyDown SDL.Keycode.backspace)
-                                                   (PrintBang))
-                                        (Pair.init (MouseMotion)
-                                                   (MoveBoxes))])
-        sdl-time (SDL.get-ticks)
-        initial-state (World.init (NoOp)
-                                  (GameState.init 0
-                                                  0.0)
-                                  sdl-time
-                                  (/ sdl-time 5)
-                                  sdl-app
-                                  resources
-                                  bindings
-                                  )]
+        logo (IMG.load-texture
+               rend
+               (cstr "./img/square.png"))
+        initial-state (State.init logo
+                                  0
+                                  0.0)]
     (do 
       (println "?")
-      (SDLApp.run-with-callbacks (app &initial-state) event-handler tick draw initial-state))))
+      (run-2d-game &(simple-2d-game sdl-app initial-state)
+                   &tick 
+                   &subscribe
+                   &get-rasters))))

@@ -107,7 +107,7 @@
 
 (defn update-game [game message]
       (match @message
-             PrintBang (do (println "!!")
+             PrintBang (do (println "!")
                          game)
              MoveBoxes (update-state game &update-boxes-x)
              Quit (do (SDLApp.stop (app &game))
@@ -142,4 +142,5 @@
       (run-2d-game &(simple-2d-game sdl-app initial-state)
                    &tick 
                    &subscribe
-                   &get-rasters))))
+                   &get-rasters
+                   &(NoOp)))))

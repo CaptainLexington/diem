@@ -1,6 +1,6 @@
 # Coy
 
-**Coy** is a lightweight, experimental game engine. It attempts to combine the [simplicity](https://www.youtube.com/watch?v=kGlVcSMgtV4) of the [Elm Architecture](https://guide.elm-lang.org/architecture/) with the [easiness](https://www.youtube.com/watch?v=oytL881p-nQ) of [DragonRuby](https://dragonruby.itch.io/dragonruby-gtk). I will lay out the goals of the game engine, the roadmap, the architecture, and a quick guide to start using it.
+**Coy** is a lightweight, experimental game engine. It attempts to combine the [simplicity](https://www.youtube.com/watch?v=kGlVcSMgtV4) of the [Elm Architecture](https://guide.elm-lang.org/architecture/) with the [easiness](https://www.youtube.com/watch?v=oytL881p-nQ) of [DragonRuby](https://dragonruby.itch.io/dragonruby-gtk). 
 
 ## Contributing
 If you're in the Carp community, you almost certainly know more about C, Carp, and game programming than I do. Feel free to leave issues or make PRs.

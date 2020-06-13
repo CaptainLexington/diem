@@ -1,0 +1,11 @@
+(defmodule Time
+           (deftype GameTime
+             [timestamp Int
+              granularity Int])
+           (use GameTime)
+           
+           (defn one-game-second [game-time]
+                 (let [gran @(granularity &game-time)]
+                   (/ 1000 gran)))
+           (defn restart [game-time]
+                 (set-timestamp game-time 0)))

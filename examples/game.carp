@@ -25,10 +25,13 @@
 (load "src/draw.carp")
 (use Draw.Raster)
 
+(load "src/time.carp")
+(use Time)
+(use Time.GameTime)
+
 (load "src/game.carp")
 (use Game)
 (use Game.Game)
-(use Game.GameTime)
 
 (Project.config "title" "Game")
 

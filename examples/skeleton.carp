@@ -1,0 +1,76 @@
+;; A walking skeleton
+
+(use IO)
+(use System)
+(use Int)
+(use Double)
+(use Array)
+
+(load "Vector.carp")
+(use Vector2)
+
+(load "SDL.carp")
+(load "SDL_image.carp")
+
+
+(load "src/input.carp")
+(use Input)
+(use Input.InputEvent)
+
+(load "src/draw.carp")
+(use Draw.Raster)
+
+(load "src/animate2d.carp")
+(use Animate2d)
+
+(load "src/time.carp")
+(use Time)
+(use Time.GameTime)
+
+(load "src/game.carp")
+(use Game)
+(use Game.Game)
+
+(Project.config "title" "Skeleton")
+
+(deftype Message
+  Quit
+  NoOp)
+(use Message)
+
+(defn tick [game message]
+      (match @message
+             Quit (do (SDLApp.stop (app &game))
+                    game)
+             _ game))
+
+(def bindings
+     (bindings-from-array &[(Pair.init (KeyDown SDL.Keycode.escape)
+                                       (Quit))]))
+
+(defn subscribe [game event]
+      (let [et (SDL.Event.type event)
+               maybe-message (value-by-event &bindings event)]
+        (if (= et SDL.Event.quit)
+          (Quit)
+          (match maybe-message
+                 (Maybe.Just message) message
+                 (Maybe.Nothing) (NoOp)))))
+
+(defn get-rasters [state-ref]
+      [(current-sprite state-ref)])
+
+(defn main []
+      (let [sdl-app (SDLApp.create "S P O O K Y" 512 512)
+            sdl-rend @(SDLApp.renderer &sdl-app)
+            skeleton-walk (from-strip sdl-rend
+                                      "./img/square.png"
+                                      10
+                                      &(Vector2.init 0 0)
+                                      &(Vector2.init 16 32)
+                                      17)]
+        (run-2d-game &(simple-2d-game sdl-app skeleton-walk)
+                     &tick 
+                     &subscribe
+                     &get-rasters
+                     &(NoOp))))

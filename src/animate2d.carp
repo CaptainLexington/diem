@@ -1,0 +1,70 @@
+(use IO)
+(use System)
+(use Int)
+(use Double)
+(use Array)
+(use Maybe)
+
+(load "src/game.carp")
+(use Game)
+(use Game.Game)
+(load "src/time.carp")
+(use Time.GameTime)
+(load "src/draw.carp")
+(use Draw)
+(use Draw.Raster)
+
+(load "Vector.carp")
+(use Vector2)
+
+(load "SDL.carp")
+(load "SDL_image.carp")
+
+(defmodule Animate2d
+           (deftype SpriteSheet
+             [frames (Array Raster)
+              elapsed GameTime
+              current-time GameTime
+              fps Int])
+           (use SpriteSheet)
+       
+           (doc from-strip "From a sprite strip with equal-sized frames arranged in sequence horizontally")
+           (defn from-strip [rend path fps top-left d n]
+                 (let [strip (IMG.load-texture rend (cstr path))
+                       width @(Vector2.x d)
+                       corners (range-or-default 0 (* width (dec n)) (inc width))
+                       sprites (copy-map &(fn [corner]
+                                              (Sprite @top-left
+                                                      (Vector2.init @corner @(Vector2.y d))
+                                                      @d
+                                                      strip
+                                                      0.0))
+                                         &corners)]
+                  (SpriteSheet.init sprites
+                                    (init 0
+                                          5)
+                                    (init 0
+                                          5)
+                                    fps)))
+
+           (defn advance-animation [game sprite-sheet]
+                 (let [max-frame (- (length (frames &sprite-sheet)) 1)
+                                 frame-delta (/ 1000 @(fps &sprite-sheet))
+                                 current-frame (/ @(timestamp (elapsed &sprite-sheet)) frame-delta)
+                                 time-delta  (- @(timestamp (game-time &game)) @(timestamp (current-time &sprite-sheet)))]
+                   (do
+                     (println &(concat &[@"Time: " (str @(real-time &game))]))
+                   (if (> current-frame max-frame)
+                     (update-elapsed sprite-sheet &restart)
+                     (set-elapsed sprite-sheet (init (+ time-delta @(timestamp (current-time &sprite-sheet)))
+                                                      @(granularity (current-time &sprite-sheet))))))))
+
+           (defn current-sprite [sprite-sheet]
+                 (let [frame-delta (/ 1000 @(fps sprite-sheet))
+                       current-frame (/ @(timestamp (elapsed sprite-sheet)) frame-delta)
+                       maybe-sprite (nth (frames sprite-sheet) current-frame)]
+                   (do 
+                     (println &(str (length (frames sprite-sheet))))
+                   (match maybe-sprite
+                            (Maybe.Just sprite) sprite
+                            (Maybe.Nothing) @(unsafe-nth (frames sprite-sheet) 0))))))

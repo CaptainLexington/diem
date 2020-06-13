@@ -84,7 +84,9 @@
                (Solid (Vector2.init (* x 8) 144) box-size box-color)]
         lines (reduce &red-lines [] &(range-or-default 0 512 16))
         img (logo state-ref)
-        sprite (Sprite (Vector2.init 100 100) (Vector2.init 300 300) @img @(fish-rot state-ref))]
+        sprite (Sprite (Vector2.init 100 100)
+                       (Vector2.init 0 0)
+                       (Vector2.init 300 300) @img @(fish-rot state-ref))]
     (concat &[[window] lines [sprite] boxes])))
 
 

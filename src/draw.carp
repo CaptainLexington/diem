@@ -18,7 +18,7 @@
              ;(Border [(Vector2 Int) (Vector2 Int) SDL_Color])
              (Solid [(Vector2 Int) (Vector2 Int) SDL_Color])
              ;(Text [(Vector2 Int) (Vector2 Int) String SDL_Color])
-             (Sprite [(Vector2 Int) (Vector2 Int) (Ptr SDL_Texture) Double])
+             (Sprite [(Vector2 Int) (Vector2 Int) (Vector2 Int) (Ptr SDL_Texture) Double])
              )
            (use Raster)
 
@@ -32,11 +32,17 @@
                    (SDL.set-render-draw-color rend (r color) (g color) (b color) (a color))
                    (SDL.render-fill-rect rend (address (SDL.rect @(Vector2.x p1) @(Vector2.y p1) @(Vector2.x d) @(Vector2.y d))))))
 
-           (defn render-sprite [rend p1 d sprite rotation]
+           (defn render-sprite [rend p1 p2 d sprite rotation]
                  (SDL.render-copy-ex rend
                                      sprite
-                                     (address (SDL.dimensions sprite))
-                                     (address (SDL.rect @(Vector2.x p1) @(Vector2.y p1) @(Vector2.x d) @(Vector2.y d)))
+                                     (address (SDL.rect @(Vector2.x p2)
+                                                        @(Vector2.y p2)
+                                                        @(Vector2.x d)
+                                                        @(Vector2.y d)))
+                                     (address (SDL.rect @(Vector2.x p1)
+                                                        @(Vector2.y p1)
+                                                        @(Vector2.x d)
+                                                        @(Vector2.y d)))
                                      rotation
                                      (address (SDL.point (/ @(Vector2.x d) 2) (/ @(Vector2.y d) 2)))
                                      SDL.flip-none))
@@ -45,7 +51,7 @@
                  (match raster
                         (Line p1 p2 color) (render-line rend &p1 &p2 &color)
                         (Solid p1 d color) (render-solid rend &p1 &d &color)
-                        (Sprite p1 d img rot) (render-sprite rend &p1 &d img rot)))
+                        (Sprite p1 p2 d img rot) (render-sprite rend &p1 &p2 &d img rot)))
 
            (defn draw [rend rasters]
                  (do 

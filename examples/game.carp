@@ -33,7 +33,6 @@
 (use Time.GameTime)
 
 (load "src/game.carp")
-(use Game)
 (use Game.Game)
 
 (Project.config "title" "Game")
@@ -147,6 +146,7 @@
             (update-game message)
             advance-game)))
 
+
 (defn initialize [sdl-app]
       (let [rend @(SDLApp.renderer sdl-app)
             logo (IMG.load-texture
@@ -159,9 +159,11 @@
                                       0.0)]
         initial-state))
 
+
 (defn main []
-      (run-2d-game &initialize
-                   &tick 
-                   &subscribe
-                   &get-rasters
-                   &(NoOp)))
+      (do
+        (Game.run-2d-game &initialize
+                          &tick 
+                          &subscribe
+                          &get-rasters
+                          &(NoOp))))

@@ -9,6 +9,7 @@
 
 (load "SDL.carp")
 (load "SDL_image.carp")
+(load "SDL_ttf.carp")
 (use SDL_Color)
 
 
@@ -17,7 +18,7 @@
              (Line [(Vector2 Int) (Vector2 Int) SDL_Color])
              ;(Border [(Vector2 Int) (Vector2 Int) SDL_Color])
              (Solid [(Vector2 Int) (Vector2 Int) SDL_Color])
-             ;(Text [(Vector2 Int) (Vector2 Int) String SDL_Color])
+             (Text [(Vector2 Int) (Vector2 Int) String (Ptr TTF_Font) SDL_Color])
              (Sprite [(Vector2 Int) (Vector2 Int) (Vector2 Int) (Ptr SDL_Texture) Double])
              )
            (use Raster)
@@ -31,6 +32,14 @@
                  (do
                    (SDL.set-render-draw-color rend (r color) (g color) (b color) (a color))
                    (SDL.render-fill-rect rend (address (SDL.rect @(Vector2.x p1) @(Vector2.y p1) @(Vector2.x d) @(Vector2.y d))))))
+
+           (defn render-text [rend p1 d text font color]
+                 (let [text-ure (TTF.render-text-to-texture rend font text color)]
+                   (SDL.draw-texture-centered rend
+                                              text-ure
+                                              &(SDL.point
+                                                @(Vector2.x p1)
+                                                @(Vector2.y p1)))))
 
            (defn render-sprite [rend p1 p2 d sprite rotation]
                  (SDL.render-copy-ex rend
@@ -51,6 +60,7 @@
                  (match raster
                         (Line p1 p2 color) (render-line rend &p1 &p2 &color)
                         (Solid p1 d color) (render-solid rend &p1 &d &color)
+                        (Text p1 d text font color) (render-text rend &p1 &d &text font color)
                         (Sprite p1 p2 d img rot) (render-sprite rend &p1 &p2 &d img rot)))
 
            (defn draw [rend rasters]

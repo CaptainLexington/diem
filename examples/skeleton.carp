@@ -64,11 +64,11 @@
       (let [sdl-app (SDLApp.create "S P O O K Y" 512 512)
             sdl-rend @(SDLApp.renderer &sdl-app)
             skeleton-walk (from-strip sdl-rend
-                                      "./img/square.png"
+                                      "./img/skeleton.png"
                                       10
                                       &(Vector2.init 0 0)
                                       &(Vector2.init 16 32)
-                                      17)]
+                                      12)]
         (run-2d-game &(simple-2d-game sdl-app skeleton-walk)
                      &tick 
                      &subscribe

@@ -140,11 +140,9 @@
         (set-state game (advance-fish-rot state game-time))))
 
 (defn tick [game message]
-      (do
-        (println &(str (ticks &game)))
-        (=> game
-            (update-game message)
-            advance-game)))
+      (=> game
+          (update-game message)
+          advance-game))
 
 
 (defn initialize [sdl-app]
@@ -162,6 +160,9 @@
 
 (defn main []
       (do
+        (set! Game.title "~ CARP ~")
+        (set! Game.width 512)
+        (set! Game.height 512)
         (Game.run-2d-game &initialize
                           &tick 
                           &subscribe

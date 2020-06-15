@@ -34,8 +34,8 @@
                      (~update-fn res message)))
 
            (def title "A Coy Game")
-           (def width 512)
-           (def height 512)
+           (def width 1024)
+           (def height 768)
 
            (doc run-2d-game "given an update-fn and a Game value, run the game")
            (defn run-2d-game [initialize-fn update-fn subscribe-fn raster-fn tick-type]

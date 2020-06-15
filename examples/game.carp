@@ -141,25 +141,27 @@
         (set-state game (advance-fish-rot state game-time))))
 
 (defn tick [game message]
-      (=> game
-          (update-game message)
-          advance-game))
+      (do
+        (println &(str (ticks &game)))
+        (=> game
+            (update-game message)
+            advance-game)))
+
+(defn initialize [sdl-app]
+      (let [rend @(SDLApp.renderer sdl-app)
+            logo (IMG.load-texture
+                   rend
+                   (cstr "./img/square.png"))
+            font (TTF.open-font (cstr "./fonts/HopeGold.ttf") 30)
+            initial-state (State.init logo
+                                      font
+                                      0
+                                      0.0)]
+        initial-state))
 
 (defn main []
-      (if (TTF.ok? (TTF.init))
-        (let [sdl-app (SDLApp.create "~ CARP ~" 512 512)
-                      rend @(SDLApp.renderer &sdl-app)
-                      logo (IMG.load-texture
-                             rend
-                             (cstr "./img/square.png"))
-                      font (TTF.open-font (cstr "./fonts/HopeGold.ttf") 30)
-                      initial-state (State.init logo
-                                                font
-                                                0
-                                                0.0)]
-          (run-2d-game &(simple-2d-game sdl-app initial-state)
-                       &tick 
-                       &subscribe
-                       &get-rasters
-                       &(NoOp)))
-        (println "Error!")))
+      (run-2d-game &initialize
+                   &tick 
+                   &subscribe
+                   &get-rasters
+                   &(NoOp)))
